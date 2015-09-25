@@ -1,33 +1,9 @@
 
 var fs = require('fs');
 var path = require('path');
-function dirTree(filename) {
-    var stats = fs.lstatSync(filename);
-    var info = {
-        path: filename,
-        name: path.basename(filename)
-    };
-
-    if (stats.isDirectory()) {
-        info.type = "folder";
-        info.children = fs.readdirSync(filename).map(function(child) {
-            return dirTree(path.join(filename, child));
-        });
-    } else {
-        // Assuming it's a file. In real life it could be a symlink or
-        // something else!
-        info.type = "file";
-    }
-
-    return info;
-}
 
 Editor.registerPanel( 'file-browser.panel', {
     is : 'file-browser',
-
-    ready : function() {
-        //this.$.loader.clear();
-    },
 
     'file-browser:open-folder' : function( thePath ) {
         // set the path value to the input box
@@ -38,12 +14,10 @@ Editor.registerPanel( 'file-browser.panel', {
     },
 
     _openPath : function() {
-        //this.$.loader.attached();
-
         console.time('refreshFolderView');
         var thePath = this.$.folderPath.inputValue;
         Editor.log('path : %s', thePath);
-        var viewData = dirTree(thePath);
+        var viewData = this._dirTree(thePath);
 
         this.$.folderView.clear();
 
@@ -57,8 +31,27 @@ Editor.registerPanel( 'file-browser.panel', {
             this._addElement(this.$.folderView, viewData);
         }
         console.timeEnd('refreshFolderView');
+    },
 
-        //this.$.loader.clear();
+    _dirTree : function (filename) {
+        var stats = fs.lstatSync(filename);
+        var info = {
+            path: filename,
+            name: path.basename(filename)
+        };
+
+        if (stats.isDirectory()) {
+            info.type = "folder";
+            info.children = fs.readdirSync(filename).map(function(child) {
+                return this._dirTree(path.join(filename, child));
+            }.bind(this));
+        } else {
+            // Assuming it's a file. In real life it could be a symlink or
+            // something else!
+            info.type = "file";
+        }
+
+        return info;
     },
 
     _addElement : function (parent, data) {

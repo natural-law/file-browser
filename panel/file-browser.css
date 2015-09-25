@@ -1,0 +1,87 @@
+:host {
+    color: #ddd;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
+}
+
+h2 {
+    font-size: 30px;
+    margin: 0px;
+    margin-bottom: 10px;
+}
+
+.state {
+    color: #888;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.title {
+    padding: 10px;
+    border-bottom: 1px solid #666;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+}
+
+editor-custom-prop {
+    padding: 8px 0px;
+}
+
+:host ::content .name.editor-custom-prop {
+    text-align: right;
+    margin-right: 25px;
+}
+
+.list-view {
+    overflow-y: auto;
+    min-height: 80px;
+    max-height: 200px;
+    border: 1px solid #666666;
+
+    padding: 5px;
+    box-shadow: inset 0 0 8px 2px rgba(0,0,0,0.2);
+    background: #333;
+}
+
+.list-view li {
+    margin-bottom: 5px;
+}
+
+.list-view li i {
+    color: yellow;
+}
+
+.list-view editor-checkbox {
+    overflow: hidden;
+}
+
+.link {
+    font-size: 12px;
+    -webkit-user-select: initial;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.link:hover {
+    color: #0c90e6;
+}
+
+editor-button {
+    margin-left: 5px;
+}
+
+.group {
+    justify-content: flex-end;
+    padding: 10px;
+}
+
+.group editor-button {
+    width: 100px;
+    margin-left: 10px;
+}

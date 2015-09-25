@@ -1,0 +1,31 @@
+{
+  "name": "file-browser",
+  "version": "0.1",
+  "description": "File Browser",
+  "author": "Bill Zhang",
+  "main": "main.js",
+  "hosts": {
+    "canvas-studio": "^0.2.0",
+    "editor-framework": "^0.3.15"
+  },
+  "menus": {
+    "Test/File Browser": {
+      "message": "file-browser:open",
+      "accelerator": "CmdOrCtrl+Shift+O"
+    }
+  },
+  "panels": {
+    "panel": {
+      "frame": "panel/file-browser.html",
+      "type": "dockable",
+      "title": "File Browser",
+      "width": 500,
+      "min-width": 325,
+      "height": 550,
+      "min-height": 550,
+      "messages": [
+        "file-browser:open-folder"
+      ]
+    }
+  }
+}

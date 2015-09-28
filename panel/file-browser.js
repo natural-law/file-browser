@@ -5,6 +5,10 @@ var path = require('path');
 Editor.registerPanel( 'file-browser.panel', {
     is : 'file-browser',
 
+    ready : function() {
+        this._selectId = null;
+    },
+
     'file-browser:open-folder' : function( thePath ) {
         // set the path value to the input box
         this.$.folderPath.inputValue = thePath;
@@ -61,6 +65,14 @@ Editor.registerPanel( 'file-browser.panel', {
             name: data.name
         });
         newEL.folded = true;
+        newEL.addEventListener('click', function( event ) {
+            event.stopPropagation();
+            if (this._selectId) {
+                this.$.folderView.unselectItemById(this._selectId);
+            }
+            this.$.folderView.selectItemById(data.path);
+            this._selectId = data.path;
+        }.bind(this));
     },
 
     newEntryRecursively: function ( entry ) {
@@ -75,5 +87,11 @@ Editor.registerPanel( 'file-browser.panel', {
 
         return el;
     },
+
+    deleteItem : function () {
+        if (this._selectId) {
+            Editor.sendToCore('file-browser:delete', this._selectId);
+        }
+    }
 
 });

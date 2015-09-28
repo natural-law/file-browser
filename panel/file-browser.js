@@ -1,12 +1,14 @@
 
 var fs = require('fs');
 var path = require('path');
+var Chokidar = require('chokidar');
 
 Editor.registerPanel( 'file-browser.panel', {
     is : 'file-browser',
 
     ready : function() {
         this._selectId = null;
+        this._fileWatcher = null;
     },
 
     'file-browser:open-folder' : function( thePath ) {
@@ -15,6 +17,31 @@ Editor.registerPanel( 'file-browser.panel', {
 
         // refresh the tree view
         this._openPath();
+    },
+
+    _forceAddItem2Tree : function ( itemPath ) {
+        if (this.$.folderView._id2el[itemPath]) {
+            return;
+        }
+
+        var theRootPath = this.$.folderPath.inputValue;
+        var parentId = path.dirname(itemPath);
+        var theName = path.basename(itemPath);
+
+        var parentEL = null;
+        if (theRootPath == parentId) {
+            parentEL = this.$.folderView;
+        } else {
+            parentEL = this.$.folderView._id2el[parentId];
+            if (!parentEL) {
+                parentEL = this._forceAddItem2Tree(parentId);
+            }
+        }
+
+        return this._addElement(parentEL, {
+            path: itemPath,
+            name: theName
+        });
     },
 
     _openPath : function() {
@@ -35,6 +62,30 @@ Editor.registerPanel( 'file-browser.panel', {
             this._addElement(this.$.folderView, viewData);
         }
         console.timeEnd('refreshFolderView');
+
+        // watch the folder
+        if (this._fileWatcher) {
+            this._fileWatcher.close();
+        }
+        this._fileWatcher = Chokidar.watch(thePath, {
+            persistent: true,
+            ignoreInitial: true
+        });
+        this._fileWatcher
+            .on('add', function ( path ) {
+                Editor.log('add %s', path);
+                this._forceAddItem2Tree(path);
+            }.bind(this))
+            .on('addDir', function( path ) {
+                Editor.log('addDir %s', path);
+                this._forceAddItem2Tree(path);
+            }.bind(this))
+            .on('unlink', function( path) {
+                this.$.folderView.removeItemById(path);
+            }.bind(this))
+            .on('unlinkDir', function( path) {
+                this.$.folderView.removeItemById(path);
+            }.bind(this));
     },
 
     _dirTree : function (filename) {
@@ -73,6 +124,8 @@ Editor.registerPanel( 'file-browser.panel', {
             this.$.folderView.selectItemById(data.path);
             this._selectId = data.path;
         }.bind(this));
+
+        return newEL;
     },
 
     newEntryRecursively: function ( entry ) {

@@ -47,6 +47,11 @@ Editor.registerPanel( 'file-browser.panel', {
     _openPath : function() {
         console.time('refreshFolderView');
         var thePath = path.normalize(this.$.folderPath.inputValue);
+        if (! fs.existsSync(thePath)) {
+            Editor.log('Path "%s" is not existed!', thePath);
+            return;
+        }
+
         Editor.log('path : %s', thePath);
         var viewData = this._dirTree(thePath);
 

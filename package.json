@@ -5,7 +5,6 @@
   "author": "Bill Zhang",
   "main": "main.js",
   "hosts": {
-    "canvas-studio": "^0.2.0",
     "editor-framework": "^0.3.15"
   },
   "menus": {

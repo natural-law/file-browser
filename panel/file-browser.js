@@ -136,8 +136,7 @@ Editor.registerPanel( 'file-browser.panel', {
     },
 
     newEntryRecursively: function ( entry ) {
-        var ctor = Editor.widgets['tree-item'];
-        var el = new ctor();
+        var el = document.createElement('tree-item');
 
         if ( entry.children ) {
             entry.children.forEach( function ( childEntry ) {

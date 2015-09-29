@@ -1,4 +1,4 @@
-var Chokidar = Editor.require('app:node_modules/chokidar');
+var Chokidar = require('chokidar');
 
 module.exports = {
     load: function () {

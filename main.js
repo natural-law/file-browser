@@ -10,7 +10,6 @@ module.exports = {
     },
 
     'file-browser:delete': function ( thePath ) {
-        Editor.log('Deleting %s', thePath);
         var fs = require('fs');
         var path = require('path');
 
@@ -34,6 +33,11 @@ module.exports = {
         };
 
         try {
+            if (! fs.existsSync(thePath)) {
+                return;
+            }
+
+            Editor.log('Deleting %s', thePath);
             var stats = fs.lstatSync(thePath);
             if (stats.isDirectory()) {
                 deleteFolderRecursive(thePath);

@@ -19,12 +19,12 @@ Editor.registerPanel( 'file-browser.panel', {
         this._openPath();
     },
 
-    _forceAddItem2Tree : function ( itemPath ) {
+    _addItem2Tree : function ( itemPath ) {
         if (this.$.folderView._id2el[itemPath]) {
             return;
         }
 
-        var theRootPath = this.$.folderPath.inputValue;
+        var theRootPath = path.normalize(this.$.folderPath.inputValue);
         var parentId = path.dirname(itemPath);
         var theName = path.basename(itemPath);
 
@@ -34,7 +34,7 @@ Editor.registerPanel( 'file-browser.panel', {
         } else {
             parentEL = this.$.folderView._id2el[parentId];
             if (!parentEL) {
-                parentEL = this._forceAddItem2Tree(parentId);
+                parentEL = this._addItem2Tree(parentId);
             }
         }
 
@@ -46,7 +46,7 @@ Editor.registerPanel( 'file-browser.panel', {
 
     _openPath : function() {
         console.time('refreshFolderView');
-        var thePath = this.$.folderPath.inputValue;
+        var thePath = path.normalize(this.$.folderPath.inputValue);
         Editor.log('path : %s', thePath);
         var viewData = this._dirTree(thePath);
 
@@ -73,12 +73,10 @@ Editor.registerPanel( 'file-browser.panel', {
         });
         this._fileWatcher
             .on('add', function ( path ) {
-                Editor.log('add %s', path);
-                this._forceAddItem2Tree(path);
+                this._addItem2Tree(path);
             }.bind(this))
             .on('addDir', function( path ) {
-                Editor.log('addDir %s', path);
-                this._forceAddItem2Tree(path);
+                this._addItem2Tree(path);
             }.bind(this))
             .on('unlink', function( path) {
                 this.$.folderView.removeItemById(path);

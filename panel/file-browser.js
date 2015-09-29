@@ -1,14 +1,12 @@
 
-var fs = require('fs');
-var path = require('path');
-var Chokidar = require('chokidar');
+var Fs = require('fs');
+var Path = require('path');
 
 Editor.registerPanel( 'file-browser.panel', {
     is : 'file-browser',
 
     ready : function() {
         this._selectId = null;
-        this._fileWatcher = null;
         this._inputPath = null;
     },
 
@@ -20,16 +18,23 @@ Editor.registerPanel( 'file-browser.panel', {
         this._openPath();
     },
 
+    'file-browser:add-item' : function( thePath ) {
+        this._addItem2Tree(thePath);
+    },
+
+    'file-browser:remove-item' : function ( thePath ) {
+        this.$.folderView.removeItemById(thePath);
+    },
+
     _addItem2Tree : function ( itemPath ) {
         if (this.$.folderView._id2el[itemPath]) {
             return;
         }
 
-        var parentId = path.dirname(itemPath);
-        var theName = path.basename(itemPath);
+        var parentId = Path.dirname(itemPath);
 
         var parentEL = null;
-        if (this._inputPath == parentId) {
+        if (this._inputPath === parentId) {
             parentEL = this.$.folderView;
         } else {
             parentEL = this.$.folderView._id2el[parentId];
@@ -38,27 +43,33 @@ Editor.registerPanel( 'file-browser.panel', {
             }
         }
 
-        return this._addElement(parentEL, {
-            path: itemPath,
-            name: theName
-        });
+        var elData = null;
+        if (Fs.lstatSync(itemPath).isDirectory()) {
+            elData = this._dirTree(itemPath);
+        } else {
+            elData = {
+                path : itemPath,
+                name : Path.basename(itemPath)
+            }
+        }
+        return this._addElement(parentEL, elData);
     },
 
     _openPath : function() {
         console.time('refreshFolderView');
         var inputValue = this.$.folderPath.inputValue;
-        if (inputValue.length == 0) {
+        if (inputValue.length === 0) {
             Editor.log('Please input the path first!');
             return;
         }
 
-        var thePath = path.normalize(inputValue);
-        if (! fs.existsSync(thePath)) {
+        var thePath = Path.normalize(inputValue);
+        if (! Fs.existsSync(thePath)) {
             Editor.log('Path "%s" is not existed!', thePath);
             return;
         }
 
-        if (thePath == this._inputPath) {
+        if (thePath === this._inputPath) {
             // not changed
             return;
         }
@@ -81,44 +92,25 @@ Editor.registerPanel( 'file-browser.panel', {
         console.timeEnd('refreshFolderView');
 
         // watch the folder
-        if (this._fileWatcher) {
-            this._fileWatcher.close();
-        }
-        this._fileWatcher = Chokidar.watch(this._inputPath, {
-            persistent: true,
-            ignoreInitial: true
-        });
-        this._fileWatcher
-            .on('add', function ( path ) {
-                this._addItem2Tree(path);
-            }.bind(this))
-            .on('addDir', function( path ) {
-                this._addItem2Tree(path);
-            }.bind(this))
-            .on('unlink', function( path) {
-                this.$.folderView.removeItemById(path);
-            }.bind(this))
-            .on('unlinkDir', function( path) {
-                this.$.folderView.removeItemById(path);
-            }.bind(this));
+        Editor.sendToCore('file-browser:watch-path', this._inputPath);
     },
 
     _dirTree : function (filename) {
-        var stats = fs.lstatSync(filename);
+        var stats = Fs.lstatSync(filename);
         var info = {
             path: filename,
-            name: path.basename(filename)
+            name: Path.basename(filename)
         };
 
         if (stats.isDirectory()) {
-            info.type = "folder";
-            info.children = fs.readdirSync(filename).map(function(child) {
-                return this._dirTree(path.join(filename, child));
+            info.type = 'folder';
+            info.children = Fs.readdirSync(filename).map(function(child) {
+                return this._dirTree(Path.join(filename, child));
             }.bind(this));
         } else {
             // Assuming it's a file. In real life it could be a symlink or
             // something else!
-            info.type = "file";
+            info.type = 'file';
         }
 
         return info;
@@ -156,9 +148,9 @@ Editor.registerPanel( 'file-browser.panel', {
         return el;
     },
 
-    deleteItem : function () {
+    deletePath : function () {
         if (this._selectId) {
-            Editor.sendToCore('file-browser:delete', this._selectId);
+            Editor.sendToCore('file-browser:delete-path', this._selectId);
         }
     }
 

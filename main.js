@@ -1,48 +1,78 @@
+var Chokidar = Editor.require('app:node_modules/chokidar');
+
 module.exports = {
     load: function () {
+        this._pathWatcher = null;
     },
 
     unload: function () {
+        if (this._pathWatcher) {
+            this._pathWatcher.close();
+            this._pathWatcher = null;
+        }
     },
 
     'file-browser:open': function () {
         Editor.Panel.open('file-browser.panel');
     },
 
-    'file-browser:delete': function ( thePath ) {
-        var fs = require('fs');
-        var path = require('path');
+    'file-browser:watch-path' : function ( thePath ) {
+        if (this._pathWatcher) {
+            this._pathWatcher.close();
+        }
+        this._pathWatcher = Chokidar.watch(thePath, {
+            persistent: true,
+            ignoreInitial: true
+        });
+        this._pathWatcher
+            .on('add', function ( path ) {
+                Editor.sendToPanel('file-browser.panel', 'file-browser:add-item', path);
+            }.bind(this))
+            .on('addDir', function( path ) {
+                Editor.sendToPanel('file-browser.panel', 'file-browser:add-item', path);
+            }.bind(this))
+            .on('unlink', function( path) {
+                Editor.sendToPanel('file-browser.panel', 'file-browser:remove-item', path);
+            }.bind(this))
+            .on('unlinkDir', function( path) {
+                Editor.sendToPanel('file-browser.panel', 'file-browser:remove-item', path);
+            }.bind(this));
+    },
+
+    'file-browser:delete-path': function ( thePath ) {
+        var Fs = require('fs');
+        var Path = require('path');
 
         var deleteFolderRecursive = function(_path) {
             var files = [];
-            if( fs.existsSync(_path) ) {
-                files = fs.readdirSync(_path);
+            if( Fs.existsSync(_path) ) {
+                files = Fs.readdirSync(_path);
                 files.forEach(function(file,index){
-                    var curPath = path.join(_path, file);
-                    if(fs.lstatSync(curPath).isDirectory()) {
+                    var curPath = Path.join(_path, file);
+                    if(Fs.lstatSync(curPath).isDirectory()) {
                         // recurse
                         deleteFolderRecursive(curPath);
                     } else {
                         // delete file
-                        fs.unlinkSync(curPath);
+                        Fs.unlinkSync(curPath);
                     }
                 });
             }
 
-            fs.rmdirSync(_path);
+            Fs.rmdirSync(_path);
         };
 
         try {
-            if (! fs.existsSync(thePath)) {
+            if (! Fs.existsSync(thePath)) {
                 return;
             }
 
             Editor.log('Deleting %s', thePath);
-            var stats = fs.lstatSync(thePath);
+            var stats = Fs.lstatSync(thePath);
             if (stats.isDirectory()) {
                 deleteFolderRecursive(thePath);
             } else {
-                fs.unlinkSync(thePath);
+                Fs.unlinkSync(thePath);
             }
             Editor.log('Delete %s succeed!', thePath);
         } catch (err) {

@@ -24,10 +24,12 @@
       "height": 550,
       "min-height": 550,
       "messages": [
-        "file-browser:open-folder"
+        "file-browser:open-folder",
+        "file-browser:add-item",
+        "file-browser:remove-item"
       ],
       "shortcuts": {
-        "del": "deleteItem"
+        "del": "deletePath"
       }
     }
   }

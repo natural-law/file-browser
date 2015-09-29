@@ -9,6 +9,7 @@ Editor.registerPanel( 'file-browser.panel', {
     ready : function() {
         this._selectId = null;
         this._fileWatcher = null;
+        this._inputPath = null;
     },
 
     'file-browser:open-folder' : function( thePath ) {
@@ -24,12 +25,11 @@ Editor.registerPanel( 'file-browser.panel', {
             return;
         }
 
-        var theRootPath = path.normalize(this.$.folderPath.inputValue);
         var parentId = path.dirname(itemPath);
         var theName = path.basename(itemPath);
 
         var parentEL = null;
-        if (theRootPath == parentId) {
+        if (this._inputPath == parentId) {
             parentEL = this.$.folderView;
         } else {
             parentEL = this.$.folderView._id2el[parentId];
@@ -46,14 +46,26 @@ Editor.registerPanel( 'file-browser.panel', {
 
     _openPath : function() {
         console.time('refreshFolderView');
-        var thePath = path.normalize(this.$.folderPath.inputValue);
+        var inputValue = this.$.folderPath.inputValue;
+        if (inputValue.length == 0) {
+            Editor.log('Please input the path first!');
+            return;
+        }
+
+        var thePath = path.normalize(inputValue);
         if (! fs.existsSync(thePath)) {
             Editor.log('Path "%s" is not existed!', thePath);
             return;
         }
 
-        Editor.log('path : %s', thePath);
-        var viewData = this._dirTree(thePath);
+        if (thePath == this._inputPath) {
+            // not changed
+            return;
+        }
+
+        this._inputPath = thePath;
+        Editor.log('path : %s', this._inputPath);
+        var viewData = this._dirTree(this._inputPath);
 
         this.$.folderView.clear();
 
@@ -72,7 +84,7 @@ Editor.registerPanel( 'file-browser.panel', {
         if (this._fileWatcher) {
             this._fileWatcher.close();
         }
-        this._fileWatcher = Chokidar.watch(thePath, {
+        this._fileWatcher = Chokidar.watch(this._inputPath, {
             persistent: true,
             ignoreInitial: true
         });
